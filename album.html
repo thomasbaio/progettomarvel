@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Raccoglitore</title>
+    <!-- import of the logo -->
+    <link rel="icon" href="../images/logo.png" type="image/x-icon">
+    <!-- import of custom CSS-->
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/card.css">
+</head>
+<body >
+    <div id="menu"></div>
+    <div class="container">
+        <div id="album_selector">
+            <div class="row ">
+                <div class="col-md-12">
+                        <h1>Select your album</h1>
+                    <p>Select the album you want to see and put cards in it, if you open a package</p>
+                    <p>If you don't have any album you can create one.</p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-4">
+                    <div id="album_selector_container" class="button-container"></div>
+                    <div id="lock" class="text-center hidden">
+                        <p class="text-danger" id="error_Message"></p>
+                        <i class="fas fa-lock fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div id="pack_cards" class="pack_cards"></div>
+            </div>  
+        </div>
+    </div>
+    <footer id="footer"></footer>
+
+        <!-- import of JS -->
+        <script src="../scripts/theme.js"></script>
+        <!-- import of the bootstrap js -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+        <!-- import of the jquery -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+        <script src="../scripts/marvel.js"></script>
+        <script src="../scripts/navbar.js"></script>
+        <script src="../scripts/login.js"></script>
+        <script type="module" src="../scripts/footer.js"></script>
+ <script>
+            function selectAlbum(albumid){
+                if (!albumid) return;
+                document.querySelectorAll('.btn-album').forEach(b => {
+                        b.classList.remove('btn-success');
+                        b.classList.add('btn-primary');
+                    });
+                localStorage.setItem("album_ID", albumid);
+                const albumElement = document.getElementById(`album-${albumid}`);
+                if (albumElement) {
+                    albumElement.classList.remove("btn-primary");
+                    albumElement.classList.add("btn-success");
+                }
+                printAlbumCards(albumid);
+            }
+            async function createAlbumButtons() {
+                var id=localStorage.getItem("_id");
+                try {
+                    const response = await fetch(`/albums/${id}`);
+                    const albums = await response.json();
+                    const albumsArray = Array.isArray(albums) ? albums : [albums];
+                    const container = document.getElementById('album_selector_container');
+                    if (albumsArray.length > 0 && albumsArray[0] !== null) {
+                        albumsArray.forEach(album => {
+                            const button = document.createElement('button');
+                            button.className = 'btn btn-primary m-2 btn-album';
+                            button.textContent = `${album.name}`;
+                            button.id =`album-${album._id}`;
+                            button.onclick = () => selectAlbum(album._id);
+                            container.appendChild(button);
+                        });
+                    } else{
+                    }
+                    // Create form for new album
+                    const form = document.createElement('form');
+                    form.className = 'form-floating mt-3 green-border';
+                    form.onsubmit = (e) => {
+                        var name = document.getElementById("new_album_name").value;
+                        e.preventDefault();
+                        createAlbum(id,name);
+                    };
+
+                    const input = document.createElement('input');
+                    input.className = 'form-control m-2';
+                    input.id = 'new_album_name';
+                    input.name = 'new_album_name';
+                    input.required = true;
+                    form.appendChild(input);
+                    const label = document.createElement('label');
+                    label.for = 'new_album_name';
+                    label.textContent = 'New album name';
+                    form.appendChild(label);
+                    const button = document.createElement('button');
+                    button.className = 'btn btn-primary m-2';
+                    button.type = 'submit';
+                    button.textContent = 'Create album';
+                    form.appendChild(button);
+
+                    container.appendChild(form);
+                    
+                } catch (error) {
+                    console.error('Error loading albums:', error);
+                } finally
+                {
+                    selectAlbum(localStorage.getItem("album_ID"));
+                }
+            }
+            document.addEventListener('DOMContentLoaded', createAlbumButtons);
+            </script>
+    <!-- end of import of JS -->
+</body>
+</html>

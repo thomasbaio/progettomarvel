@@ -1,0 +1,726 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Marvel Characters API",
+    "description": "API for AFSE (Album delle Figurine dei Super Eroi)",
+    "version": "1.0.0"
+  },
+  "host": "localhost:666",
+  "basePath": "/",
+  "tags": [
+    {
+      "name": "fetch",
+      "description": "Basic endpoint."
+    },
+    {
+      "name": "users",
+      "description": "Endpoints for the management of user data and related operations."
+    },
+    {
+      "name": "auth",
+      "description": "Endpoints related to authentication and user authorization."
+    },
+    {
+      "name": "cards",
+      "description": "Endpoints for managing the cards of the album."
+    },
+    {
+      "name": "exchanges",
+      "description": "Endpoint to manage exchanges."
+    },
+    {
+      "name": "database",
+      "description": "Endpoint to check the database connection."
+    }
+  ],
+  "schemes": [
+    "http"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/": {
+      "get": {
+        "tags": [
+          "fetch"
+        ],
+        "description": "Endpoint that allows to obtain index.html page",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/package": {
+      "get": {
+        "tags": [
+          "cards"
+        ],
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "cards"
+        ],
+        "description": "Endpoint to get a package of characters",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/card": {
+      "get": {
+        "tags": [
+          "cards"
+        ],
+        "description": "Endpoint that allows to fetch the card detail page",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/user": {
+      "get": {
+        "tags": [
+          "users"
+        ],
+        "description": "Endpoint that allows to fetch the user manage page",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/login": {
+      "get": {
+        "tags": [
+          "users"
+        ],
+        "description": "Endpoint that allows to fetch the login modal page",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "description": "Endpoint that allows to check if user",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "description": "Body to validate login.",
+            "schema": {
+              "$ref": "#/definitions/loginrequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User login data is valid",
+            "schema": {
+              "$ref": "#/definitions/loggeduser"
+            }
+          },
+          "400": {
+            "description": "Data is not valid, missing parameter"
+          },
+          "401": {
+            "description": "User not authorized"
+          },
+          "500": {
+            "description": "Internal error"
+          }
+        }
+      }
+    },
+    "/register": {
+      "get": {
+        "tags": [
+          "users"
+        ],
+        "description": "Endpoint that allows to fetch the user registration page",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "description": "Endpoint that allows to register a new user",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "description": "Body to be registered in the DB.",
+            "schema": {
+              "$ref": "#/definitions/registerrequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "succesfully registered."
+          },
+          "400": {
+            "description": "User already exists, invalid parameter"
+          },
+          "500": {
+            "description": "Generic error"
+          }
+        }
+      }
+    },
+    "/album": {
+      "get": {
+        "tags": [
+          "cards"
+        ],
+        "description": "Endpoint that allows to fetch the album page",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/sell_cards": {
+      "get": {
+        "tags": [
+          "exchanges"
+        ],
+        "description": "Endpoint that allows to fetch the page to sell cards",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/albums/{userid}": {
+      "get": {
+        "tags": [
+          "cards"
+        ],
+        "description": "Endpoint that allows to fetch the albums of the user",
+        "parameters": [
+          {
+            "name": "userid",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/albums_cards/{albumid}": {
+      "get": {
+        "tags": [
+          "cards"
+        ],
+        "description": "Endpoint that allows to fetch the cards in the album",
+        "parameters": [
+          {
+            "name": "albumid",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/albums_duplicated_cards/{albumid}": {
+      "get": {
+        "tags": [
+          "cards"
+        ],
+        "description": "Endpoint that allows to fetch duplicated cards of the album",
+        "parameters": [
+          {
+            "name": "albumid",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/create_exchange": {
+      "get": {
+        "tags": [
+          "exchanges"
+        ],
+        "description": "Endpoint that allows to fetch the create exchange page",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "exchanges"
+        ],
+        "description": "Endpoint to create a exchange",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/exchange": {
+      "get": {
+        "tags": [
+          "exchanges"
+        ],
+        "description": "Endpoint that allows to fetch the exchange page",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/get-credits": {
+      "get": {
+        "tags": [
+          "users"
+        ],
+        "description": "Endpoint that allows to fetch the page to buy credits",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/print-credits/{username}": {
+      "get": {
+        "tags": [
+          "users"
+        ],
+        "description": "Endpoint to get a the credits of user",
+        "parameters": [
+          {
+            "name": "username",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/accept_exchange": {
+      "post": {
+        "tags": [
+          "exchanges"
+        ],
+        "description": "Endpoint to accept a exchange",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/check_card_album": {
+      "post": {
+        "tags": [
+          "cards"
+        ],
+        "description": "Endpoint to check if a card is in an album",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/check_exchanges": {
+      "post": {
+        "tags": [
+          "exchanges"
+        ],
+        "description": "Endpoint to get a list of exchanges",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/check_my_exchanges": {
+      "post": {
+        "tags": [
+          "exchanges"
+        ],
+        "description": "Endpoint to get a list of my exchanges",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/character/{id}": {
+      "get": {
+        "tags": [
+          "cards"
+        ],
+        "description": "Endpoint to check get specific character from Marvel API",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/create_album": {
+      "post": {
+        "tags": [
+          "cards"
+        ],
+        "description": "Endpoint to get a package of characters",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/edit-credits": {
+      "post": {
+        "tags": [
+          "users"
+        ],
+        "description": "Endpoint to variate credits",
+        "parameters": [
+          {
+            "name": "headers",
+            "in": "headers",
+            "description": "Headers containing credit variation information",
+            "type": "object",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "username": {
+                  "type": "string",
+                  "example": "string"
+                },
+                "credits": {
+                  "type": "string",
+                  "example": "number"
+                },
+                "operation": {
+                  "type": "string",
+                  "example": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Credits successfully updated"
+          },
+          "400": {
+            "description": "Invalid parameters or insufficient credits"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/check-db": {
+      "post": {
+        "tags": [
+          "database"
+        ],
+        "description": "Endpoint to check the connection to the database",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/characters": {
+      "post": {
+        "tags": [
+          "cards"
+        ],
+        "description": "Endpoint to check get characters from Marvel API with a custom query",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/get_user_data": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "description": "Endpoint that allows to verify if user tuple of _id, email and nickname are valid in the database.",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "description": "tuple used for verification",
+            "schema": {
+              "$ref": "#/definitions/authuser"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "succesfully authorized.",
+            "schema": {
+              "$ref": "#/definitions/user"
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Invalid body parameter"
+          },
+          "500": {
+            "description": "Internal Error"
+          }
+        }
+      }
+    },
+    "/update-user": {
+      "put": {
+        "tags": [
+          "users"
+        ],
+        "description": "Endpoint to edit a user.",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/delete-user/{userid}": {
+      "delete": {
+        "tags": [
+          "users"
+        ],
+        "description": "Endpoint to delete a user",
+        "parameters": [
+          {
+            "name": "userid",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/delete-exchange/{exchangeid}": {
+      "delete": {
+        "tags": [
+          "exchanges"
+        ],
+        "description": "Endpoint to delete an exchange",
+        "parameters": [
+          {
+            "name": "exchangeid",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/sell_card/": {
+      "delete": {
+        "tags": [
+          "cards"
+        ],
+        "description": "Endpoint to sell a card",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "user": {
+      "type": "object",
+      "properties": {
+        "_id": {
+          "type": "string",
+          "example": "ObjectId('64df73b31e5eda5eb868ddcd')"
+        },
+        "name": {
+          "type": "string",
+          "example": "John"
+        },
+        "username": {
+          "type": "string",
+          "example": "Jhonny"
+        },
+        "surname": {
+          "type": "string",
+          "example": "Doe"
+        },
+        "email": {
+          "type": "string",
+          "example": "jhonny@example.com"
+        },
+        "password": {
+          "type": "string",
+          "example": "hashed_password"
+        },
+        "credits": {
+          "type": "number",
+          "example": 100
+        },
+        "cards": {
+          "type": "array",
+          "example": [
+            "card_id1",
+            "card_id2"
+          ],
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "loggeduser": {
+      "type": "object",
+      "properties": {
+        "_id": {
+          "type": "string",
+          "example": "64df73b31e5eda5eb868ddcd"
+        },
+        "username": {
+          "type": "string",
+          "example": "johndough"
+        },
+        "email": {
+          "type": "string",
+          "example": "johndough@gmail.com"
+        },
+        "name": {
+          "type": "string",
+          "example": "John"
+        }
+      },
+      "required": [
+        "_id",
+        "username",
+        "email",
+        "name"
+      ]
+    },
+    "loginrequest": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "example": "johndough@gmail.com"
+        },
+        "username": {
+          "type": "string",
+          "example": "johndough"
+        },
+        "password": {
+          "type": "string",
+          "example": "password"
+        }
+      },
+      "required": [
+        "password"
+      ]
+    }
+  }
+}
