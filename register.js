@@ -1,3 +1,7 @@
+/**
+ * Componente per la selezione e ricerca di un supereroe tramite API Marvel.
+ * Gestisce dropdown dinamico, validazione, selezione e popolamento automatico dei dati.
+ */
 class SearchableSelect {
     constructor(config) {
         this.apiUrl = config.apiUrl;
@@ -12,7 +16,7 @@ class SearchableSelect {
     }
 
     init() {
-        // Search input event listener
+        // Listener su input per ricerca (debounced)
         this.searchInput.addEventListener('input', () => {
             clearTimeout(this.debounceTimeout);
             this.debounceTimeout = setTimeout(() => {
@@ -22,18 +26,18 @@ class SearchableSelect {
                 } else {
                     this.hideResults();
                 }
-            }, 300); // Debounce delay
+            }, 300);
         });
 
-        // Close dropdown when clicking outside
+        // Chiudi dropdown su click fuori
         document.addEventListener('click', (e) => {
-            if (!this.searchInput.contains(e.target) && 
+            if (!this.searchInput.contains(e.target) &&
                 !this.resultsDropdown.contains(e.target)) {
                 this.hideResults();
             }
         });
 
-        // Show dropdown when focusing on input
+        // Mostra dropdown su focus se ci sono risultati
         this.searchInput.addEventListener('focus', () => {
             if (this.searchResults.children.length > 0) {
                 this.showResults();
@@ -44,15 +48,13 @@ class SearchableSelect {
     async performSearch(query) {
         try {
             this.showLoading();
-            
-            // Creation of the query
-            query="nameStartsWith="+query+"&orderBy=name&"
-
-            await getMarvelCarachters(query).then (async response  => {
+            // Prepara query per Marvel API
+            query = "nameStartsWith=" + query + "&orderBy=name&";
+            await getMarvelCarachters(query).then(async response => {
+                // Filtra risultati se sei nella pagina di scambio e la carta è già posseduta
                 if (window.location.pathname === '/create_exchange') {
                     const user_Id = localStorage.getItem("_id");
                     const album_ID = localStorage.getItem("album_ID");
-                    
                     if (user_Id && album_ID) {
                         const filteredData = [];
                         for (const character of response.data) {
@@ -77,17 +79,15 @@ class SearchableSelect {
                         response.data = filteredData;
                     }
                 }
-                    this.displayResults(response.data);
-                if (response.code!=200) {
-                throw new Error('Network response was not ok'+response.code);
+                this.displayResults(response.data);
+                if (response.code != 200) {
+                    throw new Error('Network response was not ok' + response.code);
                 }
             })
             .catch(error => {
                 console.error('Error fetching data:', error);
                 this.displayError('Error fetching results');
-            })
-
-
+            });
         } catch (error) {
             console.error('Error fetching data:', error);
             this.displayError('Error fetching results');
@@ -98,7 +98,7 @@ class SearchableSelect {
 
     displayResults(data) {
         this.searchResults.innerHTML = '';
-        if (data.length === 0) {
+        if (!data || data.length === 0) {
             const noResults = document.createElement('li');
             noResults.className = 'search-item text-muted';
             noResults.textContent = 'No valid results found';
@@ -107,90 +107,71 @@ class SearchableSelect {
             data.forEach(item => {
                 const li = document.createElement('li');
                 li.className = 'search-item';
-                li.textContent = item.name; // Adjust according to your data structure
-                li.dataset.value = item.id; // Adjust according to your data structure
-                
+                li.textContent = item.name;
+                li.dataset.value = item.id;
                 li.addEventListener('click', () => {
                     this.selectItem(item);
                 });
-                
                 this.searchResults.appendChild(li);
             });
         }
-        
         this.showResults();
     }
 
     async selectItem(item) {
-        this.selectedValue.value = item.id; // Adjust according to your data structure
-        this.searchInput.value = item.name; // Adjust according to your data structure
+        this.selectedValue.value = item.id;
+        this.searchInput.value = item.name;
         this.hideResults();
-        
-        // Trigger change event
-        const event = new CustomEvent('item-selected', { 
-            detail: item 
-        });
+
+        // Trigger custom event
+        const event = new CustomEvent('item-selected', { detail: item });
         this.searchInput.dispatchEvent(event);
-        if (['/card' ].includes(window.location.pathname))
-            {
-                document.getElementById('character_details').innerHTML=``;
-                var Div_Car =
-                '<div class="card card-shine-effect-metal" id="char-'+item.id+'">'+
-                    '<div class="card-header">'+
-                        item.name+
-                    '</div>'+
-                    //'<hr>'+
-                    '<div class="card-content">'+
-                        '<img src="'+item.thumbnail.path.replace(/"/g, "")+'.'+item.thumbnail.extension+'">'+
-                    '</div>'+
-                    '<div class="card-body">'+
-                    item.description+
-                    '</div>'+
-                    '<div class="card-footer">'+
-                    'Data provided by ©Marvel'
-                    '</div>'+
+
+        // Se sei su /card mostra dettagli del supereroe
+        if (['/card'].includes(window.location.pathname)) {
+            document.getElementById('character_details').innerHTML = ``;
+            var Div_Car =
+                '<div class="card card-shine-effect-metal" id="char-' + item.id + '">' +
+                    '<div class="card-header">' + item.name + '</div>' +
+                    '<div class="card-content">' +
+                        '<img src="' + item.thumbnail.path.replace(/"/g, "") + '.' + item.thumbnail.extension + '">' +
+                    '</div>' +
+                    '<div class="card-body">' + item.description + '</div>' +
+                    '<div class="card-footer">Data provided by ©Marvel</div>' +
                 '</div>';
-                document.getElementById("CardContainer").innerHTML = Div_Car;
-                //If the user is logged and has selected an album and have the card in the album i present all data
-                var user_Id = localStorage.getItem("_id");
-                var album_ID = localStorage.getItem("album_ID");
-                if (!user_Id || !album_ID ) {
-                    return;
-                }
-                try {
-                    const response = await fetch('/check_card_album', {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json"
-                        },
-                        body: JSON.stringify({
-                            user_Id: user_Id,
-                            album_Id: album_ID,
-                            card_Id: item.id // invio dell'id al posto della password.
-                        })
-                    });
-                    if (!response.ok) {
-                        throw new Error("Autenticazione non valida");
-                    }
-                    const userData = await response.json();
-                    if (userData.length>0) {
+            document.getElementById("CardContainer").innerHTML = Div_Car;
+            // Se l'utente è loggato e ha l'album, mostra dettagli extra se possiede la carta
+            var user_Id = localStorage.getItem("_id");
+            var album_ID = localStorage.getItem("album_ID");
+            if (!user_Id || !album_ID) return;
+            try {
+                const response = await fetch('/check_card_album', {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        user_Id: user_Id,
+                        album_Id: album_ID,
+                        card_Id: item.id
+                    })
+                });
+                if (!response.ok) throw new Error("Autenticazione non valida");
+                const userData = await response.json();
+                if (userData.length > 0) {
                     const character_details = document.getElementById('character_details');
-                     let seriesHtml=``;
-                     let eventsHtml=``;
-                     let comicsHtml=``;
-                    if ( item.series.available>0 ){
+                    let seriesHtml = "", eventsHtml = "", comicsHtml = "";
+                    if (item.series.available > 0) {
                         seriesHtml = '<hr><h3>Series:</h3><br>';
                         for (let series of item.series.items) {
                             seriesHtml += `<p>${series.name}</p>`;
                         }
                     }
-                    if ( item.events.available>0 ){
+                    if (item.events.available > 0) {
                         eventsHtml = '<hr><h3>Events:</h3>';
                         for (let events of item.events.items) {
                             eventsHtml += `<p>${events.name}</p>`;
                         }
                     }
-                    if ( item.comics.available>0 ){
+                    if (item.comics.available > 0) {
                         comicsHtml = '<hr><h3>Comics:</h3>';
                         for (let comic of item.comics.items) {
                             comicsHtml += `<p>${comic.name}</p>`;
@@ -198,14 +179,11 @@ class SearchableSelect {
                     }
                     character_details.innerHTML = seriesHtml + eventsHtml + comicsHtml;
                 }
-                    }
-                    /*Check the superhero that doesn't work*/
-                catch (error) {
-                    console.error("Errore!",error);
-                    return "ERR";
-                }
-                //}
+            } catch (error) {
+                console.error("Errore!", error);
+                return "ERR";
             }
+        }
     }
 
     displayError(message) {
@@ -230,11 +208,15 @@ class SearchableSelect {
     hideLoading() {
         this.loadingIndicator.classList.add('d-none');
     }
+
+    /**
+     * Imposta il supereroe selezionato dato l'id (es. per popolamento profilo).
+     * @param {string|number} id
+     */
     async setSuperheroById(id) {
         try {
             this.showLoading();
             const response = await getSingleHero(id);
-            
             if (response.data && response.data.length > 0) {
                 const hero = response.data[0];
                 this.selectItem(hero);
@@ -250,16 +232,19 @@ class SearchableSelect {
     }
 }
 
-// Initialize the component
+// Inizializza il SearchableSelect
 const searchSelect = new SearchableSelect({
-    minChars: 4 // Minimum characters before triggering search
+    minChars: 4 // Caratteri minimi per la ricerca
 });
 
-// Listen for selection
+// Listener per la selezione (puoi gestire eventuale logica extra qui)
 document.getElementById('select_superhero').addEventListener('item-selected', (e) => {
-    // Handle the selection here
+    // Custom logic se serve
 });
 
+/**
+ * Gestisce la registrazione utente dopo la validazione client-side.
+ */
 async function register() {
     var email = document.getElementById('email');
     var username = document.getElementById('username');
@@ -268,102 +253,88 @@ async function register() {
     var name = document.getElementById('name');
     var surname = document.getElementById('surname');
     var date_of_birth = document.getElementById('date_of_birth');
-    //This hidden item contains the selected superhero
     var selected_Superhero = document.getElementById("selected_Superhero");
-    //This item is the one used to select the superhero and is visible
     var superhero_selection = document.getElementById("select_superhero");
-    // Check of the password
+
+    // Validazione passowrd
     if (password1.value != password2.value || password1.value.length < 7) {
-       password1.classList.add('border');
-       password1.classList.add('border-danger');
-       password2.classList.add('border');
-       password2.classList.add('border-danger');
-       alert("The password must be at least 7 characters long and match the confirmation!");
-       return;
+        password1.classList.add('border', 'border-danger');
+        password2.classList.add('border', 'border-danger');
+        alert("The password must be at least 7 characters long and match the confirmation!");
+        return;
     } else {
-       password1.classList.remove('border');
-       password1.classList.remove('border-danger');
-       password2.classList.remove('border');
-       password2.classList.remove('border-danger');
+        password1.classList.remove('border', 'border-danger');
+        password2.classList.remove('border', 'border-danger');
     }
-    // Check the date of birth with regexp
+
+    // Validazione data di nascita
     var dataPattern = /^\d{4}-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])$/;
     if (!dataPattern.test(date_of_birth.value)) {
-       date_of_birth.classList.add('border');
-       date_of_birth.classList.add('border-danger');
-       alert("The date of birth must be in the format DD/MM/YYYY!");
-       return;
+        date_of_birth.classList.add('border', 'border-danger');
+        alert("The date of birth must be in the format YYYY-MM-DD!");
+        return;
     } else {
-       date_of_birth.classList.remove('border');
-       date_of_birth.classList.remove('border-danger');
+        date_of_birth.classList.remove('border', 'border-danger');
     }
- 
-    // Check email with regexp
+
+    // Validazione email
     var emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
     if (!emailPattern.test(email.value)) {
-       email.classList.add('border');
-       email.classList.add('border-danger');
-       alert("Insert a valid email address!");
-       return;
+        email.classList.add('border', 'border-danger');
+        alert("Insert a valid email address!");
+        return;
     } else {
-       email.classList.remove('border');
-       email.classList.remove('border-danger');
+        email.classList.remove('border', 'border-danger');
     }
- 
-    // Check length of username and check with regexp
+
+    // Validazione username
     var usermanePattern = /^[a-zA-Z0-9_]{4,16}$/;
     if (!usermanePattern.test(username.value)) {
-        username.classList.add('border');
-        username.classList.add('border-danger');
-       alert("The username must be between 4 and 16 characters long and contain only letters, numbers and underscores!");
-       return;
+        username.classList.add('border', 'border-danger');
+        alert("The username must be between 4 and 16 characters long and contain only letters, numbers and underscores!");
+        return;
     } else {
-        username.classList.remove('border');
-       username.classList.remove('border-danger');
+        username.classList.remove('border', 'border-danger');
     }
- 
-    // Check of the angrafic data
+
+    // Nome
     if (!name.value) {
-       name.classList.add('border');
-       name.classList.add('border-danger');
-       alert("Insert your name!");
-       return;
+        name.classList.add('border', 'border-danger');
+        alert("Insert your name!");
+        return;
     } else {
-       name.classList.remove('border');
-       name.classList.remove('border-danger');
+        name.classList.remove('border', 'border-danger');
     }
- 
+
+    // Cognome
     if (!surname.value) {
-       surname.classList.add('border');
-       surname.classList.add('border-danger');
-       alert("Insert your surname!");
-       return;
+        surname.classList.add('border', 'border-danger');
+        alert("Insert your surname!");
+        return;
     } else {
-       surname.classList.remove('border');
-       surname.classList.remove('border-danger');
+        surname.classList.remove('border', 'border-danger');
     }
- 
-    //Check if superhero is selected. Only check is selected because the non valid characters are not selectable
+
+    // Supereroe selezionato
     if (!selected_Superhero.value) {
-        superhero_selection.classList.add('border');
-        superhero_selection.classList.add('border-danger');
+        superhero_selection.classList.add('border', 'border-danger');
         alert("Select a superhero!");
         return;
-     } else {
-        superhero_selection.classList.remove('border');
-        superhero_selection.classList.remove('border-danger');
-     }
+    } else {
+        superhero_selection.classList.remove('border', 'border-danger');
+    }
+
     var data = {
-       name: name.value,
-       username: username.value,
-       surname: surname.value,
-       email: email.value,
-       password: password1.value,
-       date: date_of_birth.value,
-       superhero: selected_Superhero.value, // I set the selected superhero ID
-       credits: 0.0
+        name: name.value,
+        username: username.value,
+        surname: surname.value,
+        email: email.value,
+        password: password1.value,
+        date: date_of_birth.value,
+        superhero: selected_Superhero.value,
+        credits: 0.0
     };
- 
+
     const button = document.querySelector('button');
     button.disabled = true;
     button.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Registrazione...';
@@ -378,47 +349,42 @@ async function register() {
             body: JSON.stringify(data),
             credentials: 'include'
         });
-        
-
-        const result = await response;;
 
         if (!response.ok) {
+            const result = await response.json();
             if (response.status == 530) {
                 throw new Error(result.message || "Username or email already in use");
             } else {
                 throw new Error(result.message);
             }
         }
-        
-        // Clean of localstorage for security
+
+        // Pulisce il localStorage per sicurezza
         localStorage.clear();
-        //In the modal dialog of login if the modal is closed I redirect to the homepage
+
+        // Mostra la modal login e reindirizza a home dopo chiusura
         var loginModal = document.getElementById('loginModal');
         loginModal.addEventListener('hidden.bs.modal', function () {
-                window.location.href = '/';
+            window.location.href = '/';
         });
         alert("User registered successfully! You can now log in.");
-        //Cambio il target, prima mi serviva l'elemento HTML, adeso uso l'oggetto
         loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
         loginModal.show();
 
-
     } catch (error) {
-         // Reset button state
-         button.disabled = false;
-         button.innerHTML = 'Register';
-         
-         // Show error
-         alert('Registration failed. Please try again. ' + error.message);
+        button.disabled = false;
+        button.innerHTML = 'Register';
+        alert('Registration failed. Please try again. ' + error.message);
         console.error('Registration failed:', error);
-        // Show error to user
-        document.getElementById('error-message').textContent = 
+        document.getElementById('error-message').textContent =
             'Registration failed. Please try again.';
     }
- }
+}
 
-
- async function populateUserProfile() {
+/**
+ * Popola i dati profilo utente su pagina profilo.
+ */
+async function populateUserProfile() {
     var email = localStorage.getItem("email");
     var username = localStorage.getItem("username");
     var _id = localStorage.getItem("_id");
@@ -429,59 +395,42 @@ async function register() {
     try {
         const response = await fetch('/get_user_data', {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                email: email,
-                username: username,
-                _id: _id // invio dell'id al posto della password.
-            })
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: email, username: username, _id: _id })
         });
-        if (!response.ok) {
-            throw new Error("Autenticazione non valida");
-        }
+        if (!response.ok) throw new Error("Autenticazione non valida");
         const userData = await response.json();
-        // Mostra i dati dell'utente nel profilo
         document.getElementById("username").value = userData.username;
         document.getElementById("email").value = userData.email;
         document.getElementById("name").value = userData.name;
         document.getElementById("surname").value = userData.surname;
-        // Get correct select element and update
         const selectElement = document.getElementById('selected_Superhero');
-        
         if (selectElement) {
             selectElement.value = userData.superhero;
-             // Fetch superhero details using the ID
-             try {
-                const heroResponse = await getSingleHero(userData.superhero);    
+            try {
+                const heroResponse = await getSingleHero(userData.superhero);
                 const searchInput = document.getElementById('select_superhero');
-                if (!heroResponse) {
-                    throw new Error('No response from hero fetch');
-                }
-                
+                if (!heroResponse) throw new Error('No response from hero fetch');
                 if (heroResponse.data && heroResponse.data.length > 0) {
                     const hero = heroResponse.data[0];
-                    // Update the visible search input with the hero name
                     searchInput.value = hero.name;
                 } else {
-                    console.error("Superhero not found");
                     searchInput.value = "Superhero not found";
                 }
             } catch (error) {
-                console.error("Error fetching superhero details:", error);
                 searchInput.value = "Error loading superhero";
             }
         }
-        /*Check the superhero that doesn't work*/
-        document.getElementById("date_of_birth").value = userData.date;    }
-     catch (error) {
-        console.error("Errore!",error);
+        document.getElementById("date_of_birth").value = userData.date;
+    } catch (error) {
+        console.error("Errore!", error);
         return "ERR";
     }
-    
 }
 
+/**
+ * Aggiorna dati utente sul profilo.
+ */
 async function updateUser() {
     var email = document.getElementById('email');
     var username = document.getElementById('username');
@@ -490,102 +439,88 @@ async function updateUser() {
     var name = document.getElementById('name');
     var surname = document.getElementById('surname');
     var date_of_birth = document.getElementById('date_of_birth');
-    //This hidden item contains the selected superhero
     var selected_Superhero = document.getElementById("selected_Superhero");
-    //This item is the one used to select the superhero and is visible
     var superhero_selection = document.getElementById("select_superhero");
-    // Check of the password
-    if ((password1.value != password2.value || password1.value.length < 7 ) && password1.value) {
-       password1.classList.add('border');
-       password1.classList.add('border-danger');
-       password2.classList.add('border');
-       password2.classList.add('border-danger');
-       alert("The password must be at least 7 characters long and match the confirmation!");
-       return;
+
+    // Validazione password solo se inserita
+    if ((password1.value != password2.value || password1.value.length < 7) && password1.value) {
+        password1.classList.add('border', 'border-danger');
+        password2.classList.add('border', 'border-danger');
+        alert("The password must be at least 7 characters long and match the confirmation!");
+        return;
     } else {
-       password1.classList.remove('border');
-       password1.classList.remove('border-danger');
-       password2.classList.remove('border');
-       password2.classList.remove('border-danger');
+        password1.classList.remove('border', 'border-danger');
+        password2.classList.remove('border', 'border-danger');
     }
-    // Check the date of birth with regexp
+
+    // Validazione data di nascita
     var dataPattern = /^\d{4}-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])$/;
     if (!dataPattern.test(date_of_birth.value)) {
-       date_of_birth.classList.add('border');
-       date_of_birth.classList.add('border-danger');
-       alert("The date of birth must be in the format DD/MM/YYYY!");
-       return;
+        date_of_birth.classList.add('border', 'border-danger');
+        alert("The date of birth must be in the format YYYY-MM-DD!");
+        return;
     } else {
-       date_of_birth.classList.remove('border');
-       date_of_birth.classList.remove('border-danger');
+        date_of_birth.classList.remove('border', 'border-danger');
     }
- 
-    // Check email with regexp
+
+    // Validazione email
     var emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
     if (!emailPattern.test(email.value)) {
-       email.classList.add('border');
-       email.classList.add('border-danger');
-       alert("Insert a valid email address!");
-       return;
+        email.classList.add('border', 'border-danger');
+        alert("Insert a valid email address!");
+        return;
     } else {
-       email.classList.remove('border');
-       email.classList.remove('border-danger');
+        email.classList.remove('border', 'border-danger');
     }
- 
-    // Check length of username and check with regexp
+
+    // Validazione username
     var usermanePattern = /^[a-zA-Z0-9_]{4,16}$/;
     if (!usermanePattern.test(username.value)) {
-        username.classList.add('border');
-        username.classList.add('border-danger');
-       alert("The username must be between 4 and 16 characters long and contain only letters, numbers and underscores!");
-       return;
+        username.classList.add('border', 'border-danger');
+        alert("The username must be between 4 and 16 characters long and contain only letters, numbers and underscores!");
+        return;
     } else {
-        username.classList.remove('border');
-       username.classList.remove('border-danger');
+        username.classList.remove('border', 'border-danger');
     }
- 
-    // Check of the angrafic data
+
+    // Nome
     if (!name.value) {
-       name.classList.add('border');
-       name.classList.add('border-danger');
-       alert("Insert your name!");
-       return;
+        name.classList.add('border', 'border-danger');
+        alert("Insert your name!");
+        return;
     } else {
-       name.classList.remove('border');
-       name.classList.remove('border-danger');
+        name.classList.remove('border', 'border-danger');
     }
- 
+
+    // Cognome
     if (!surname.value) {
-       surname.classList.add('border');
-       surname.classList.add('border-danger');
-       alert("Insert your surname!");
-       return;
+        surname.classList.add('border', 'border-danger');
+        alert("Insert your surname!");
+        return;
     } else {
-       surname.classList.remove('border');
-       surname.classList.remove('border-danger');
+        surname.classList.remove('border', 'border-danger');
     }
- 
-    //Check if superhero is selected. Only check is selected because the non valid characters are not selectable
+
+    // Supereroe selezionato
     if (!selected_Superhero.value) {
-        superhero_selection.classList.add('border');
-        superhero_selection.classList.add('border-danger');
+        superhero_selection.classList.add('border', 'border-danger');
         alert("Select a superhero!");
         return;
-     } else {
-        superhero_selection.classList.remove('border');
-        superhero_selection.classList.remove('border-danger');
-     }
+    } else {
+        superhero_selection.classList.remove('border', 'border-danger');
+    }
+
     var data = {
-       name: name.value,
-       _id : localStorage.getItem("_id"),
-       username: username.value,
-       password: password1.value,
-       surname: surname.value,
-       email: email.value,
-       date: date_of_birth.value,
-       superhero: selected_Superhero.value // I set the selected superhero ID
+        name: name.value,
+        _id: localStorage.getItem("_id"),
+        username: username.value,
+        password: password1.value,
+        surname: surname.value,
+        email: email.value,
+        date: date_of_birth.value,
+        superhero: selected_Superhero.value
     };
- 
+
     const button = document.querySelector('button');
     button.disabled = true;
     button.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Registrazione...';
@@ -600,7 +535,6 @@ async function updateUser() {
             body: JSON.stringify(data),
             credentials: 'include'
         });
-        
 
         const result = await response.json();
 
@@ -608,7 +542,7 @@ async function updateUser() {
             throw new Error(result.message);
         }
 
-        // Save user credentials in LocalStorage using the result data
+        // Aggiorna localStorage
         localStorage.setItem("email", data.email);
         localStorage.setItem("username", data.username);
         localStorage.setItem("name", data.name);
@@ -616,22 +550,21 @@ async function updateUser() {
         window.location.reload();
         return;
     } catch (error) {
-         // Reset button state
-         button.disabled = false;
-         button.innerHTML = 'Register';
-         
-         // Show error
-         alert('Update failed failed. Please try again. ' + error.message);
+        button.disabled = false;
+        button.innerHTML = 'Register';
+        alert('Update failed. Please try again. ' + error.message);
         console.error('Update failed:', error);
-        // Show error to user
-        document.getElementById('error-message').textContent = 
+        document.getElementById('error-message').textContent =
             'Update failed. Please try again.';
     }
 }
 
+/**
+ * Cancella l'utente loggato.
+ */
 async function deleteUser() {
     var _id = localStorage.getItem("_id");
-    try{
+    try {
         const response = await fetch(`../delete-user/${_id}`, {
             method: 'DELETE',
             headers: {
@@ -640,12 +573,10 @@ async function deleteUser() {
             }
         });
         alert("User successfully deleted. Now you will return to homepage");
-        localStorage.clear();    
-        //Going back to the homepage
+        localStorage.clear();
         window.location.href = '/';
-
     } catch (error) {
-        console.error("Errore!",error);
+        console.error("Errore!", error);
         return "ERR";
     }
 }
