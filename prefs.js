@@ -1,31 +1,34 @@
+/**
+ * Carica le variabili d'ambiente dal file .env.
+ * Questo permette di mantenere le chiavi e le configurazioni sensibili fuori dal codice sorgente.
+ */
 const dotenv = require('dotenv');
 dotenv.config();
+
 /**
- * Configuration object for Marvel API authentication and endpoint.
+ * Oggetto di configurazione per l'API Marvel.
+ * Contiene le variabili per autenticazione e endpoint Marvel.
  * @typedef {Object} MarvelConfig
- * @property {string} base_url - The base URL for Marvel API endpoints
- * @property {string} public_key - The public API key for Marvel API authentication
- * @property {string} private_key - The private API key for Marvel API authentication
+ * @property {string} base_url - URL base per le API Marvel
+ * @property {string} public_key - Chiave pubblica per autenticazione Marvel
+ * @property {string} private_key - Chiave privata per autenticazione Marvel
  */
 const marvel = {
     base_url: process.env.BASE_URL,
     public_key: process.env.PUBLIC_KEY,
     private_key: process.env.PRIVATE_KEY,
- };
- /**
- * Main configs
- * @param {string} host - Host to use as server for NodeJS environment
- * @param {string} port - Port to use for the host if available
- * 
- */
+};
+
 /**
- * Configuration object for server settings
+ * Oggetto di configurazione principale per il server NodeJS.
  * @type {Object}
- * @property {string} host - The host address from environment variables
- * @property {string} port - The port number from environment variables
+ * @property {string} host - Indirizzo host da variabili d'ambiente
+ * @property {string} port - Numero di porta da variabili d'ambiente
  */
- const config = {
+const config = {
     host: process.env.HOST,
     port: process.env.PORT,
- };
- module.exports = { marvel, config };
+};
+
+// Esporta le configurazioni per l'uso in altri moduli
+module.exports = { marvel, config };
