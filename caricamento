@@ -1,39 +1,62 @@
+<!-- MODALE DI LOGIN -->
 <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
+            <!-- HEADER DEL MODALE -->
             <div class="modal-header">
                 <h5 class="modal-title" id="loginModalLabel">Login</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
+            <!-- CORPO DEL MODALE -->
             <div class="modal-body">
                 <div class="container">
+                    <!-- CAMPO USERNAME O EMAIL -->
                     <div class="mb-3">
                         <label for="usernameOrEmail" class="form-label">Username or Email</label>
-                        <input id="usernameOrEmail" type="email" class="form-control" >
+                        <!-- type="text" permette sia nome utente che email -->
+                        <input id="usernameOrEmail" type="text" class="form-control" autocomplete="username" required>
                     </div>
+                    <!-- CAMPO PASSWORD -->
                     <div class="mb-3">
                         <label for="password" class="form-label">Password</label>
-                        <input id="password" type="password" class="form-control" >
+                        <input id="password" type="password" class="form-control" autocomplete="current-password" required>
                     </div>
-                    <p class="mt-3">Dont have an account yet? <a href="/register">Register here</a></p>
+                    <p class="mt-3">
+                        Don't have an account yet? 
+                        <a href="/register">Register here</a>
+                    </p>
                 </div>
+                <!-- QUI VERRANNO MOSTRATI MESSAGGI DI ERRORE O RISULTATI LOGIN -->
                 <div class="resultContainer"></div>
             </div>
+            <!-- FOOTER DEL MODALE -->
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <!-- Il bottone "submit" chiama la funzione login() -->
                 <button type="submit" class="btn btn-primary" onclick="login()">Login</button>
             </div>
         </div>
     </div>
 </div>
+
 <script>
-   if( checkUserLogged() ) {
+    // Se l'utente risulta già autenticato, lo reindirizza alla Home
+    if (typeof checkUserLogged === "function" && checkUserLogged()) {
         window.location.href = "/";
-   }
-   /* This code assigns an event handler to the "Enter" key press (key code 13) on the keyboard
-      when the user is within the input element with the ID "password."
-      When the "Enter" key is pressed (key code 13), the "login()" function is called. */
-   document.getElementById('password').onkeydown = function (e) {
-      if (e.keyCode == 13) login();
-   } 
+    }
+
+    // Permette di inviare il login anche premendo "Enter" nel campo password
+    document.addEventListener("DOMContentLoaded", function () {
+        const passwordInput = document.getElementById('password');
+        if (passwordInput) {
+            passwordInput.addEventListener('keydown', function (e) {
+                if (e.key === "Enter" || e.keyCode === 13) {
+                    login();
+                }
+            });
+        }
+    });
+
+    // Nota: la funzione login() deve essere definita altrove (es. in uno script globale)
+    //       la funzione checkUserLogged() deve essere disponibile per il check iniziale
 </script>
